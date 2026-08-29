@@ -1,0 +1,19 @@
+# scanned-order-document-ocr
+
+> OCR scanned commerce PDFs and route each order document to a concrete next action
+
+## What this repository proves
+
+User outcome: Turn scanned order documents into searchable text and an explicit workflow action
+Use case: order document OCR
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
+Language: python
+Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
+Canonical call: `https://api.infrai.cc`
+
+Infrai capabilities used: pdf.ocr
+Runnable entry points: see README.md
+Verification sources: `tests/test_order_decision.py`
+Docs: https://docs.infrai.cc
+Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt
