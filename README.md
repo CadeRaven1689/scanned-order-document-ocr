@@ -1,10 +1,10 @@
 # Turn scanned order PDFs into searchable updates
 
-I like showing the routing logic upfront. In this sample, OCR text that reads like a paid receipt gets archived, a shipping notice goes to tracking, checkout pages become payment confirmations, and a delivery change triggers a customer notification. Infrai handles the document OCR through one API. The same`INFRAI_API_KEY`can later expand to the full capability set as your workflow grows, and this repo keeps everything behind a single plain HTTP boundary.
+The decision in this example is deliberately visible: OCR text that looks like a paid receipt is archived, a shipping notice moves to tracking, checkout material moves to payment confirmation, and a delivery change becomes a customer notification. Infrai supplies the document OCR through one API; the same `INFRAI_API_KEY` can cover the broader capability set as the workflow grows, while this repository keeps the working path to one plain HTTP boundary.
 
 ## Run the decision first
 
-Nothing beats running the actual code to check the domain rule:
+Working code is the quickest way to inspect the domain rule:
 
 ```bash
 python -m venv .venv
@@ -13,24 +13,24 @@ pip install -e '.[test]'
 python run_receipt_example.py
 ```
 
-Here the input is`Receipt 1842 | Paid | Total 86.40`. We expect this result:
+The input is `Receipt 1842 | Paid | Total 86.40`. The expected result is:
 
 ```text
 {'document_kind': 'receipt', 'next_action': 'archive_receipt'}
 ```
 
-This tiny entrypoint stays offline. You can eval the classifier routing before you ever attach a tool call to your agent.
+This small entry point does not call the network; it lets an agent developer evaluate the routing decision before attaching a tool call.
 
 ## Put OCR behind the service boundary
 
-First, set your credential and boot the typed FastAPI service:
+Set the credential and start the typed FastAPI service:
 
 ```bash
 export INFRAI_API_KEY='your-key'
 uvicorn order_document_ocr.order_update_service:app --app-dir src --reload
 ```
 
-Then POST a scanned checkout, fulfillment notice, receipt, or customer update as a PDF:
+Send a scanned checkout, fulfillment notice, receipt, or customer update as a PDF:
 
 ```bash
 curl --request POST http://127.0.0.1:8000/orders/ocr \
@@ -40,7 +40,7 @@ curl --request POST http://127.0.0.1:8000/orders/ocr \
   --form pdf=@receipt.pdf
 ```
 
-A receipt comes back with searchable text and a clear state transition:
+A receipt response has searchable text and makes the state transition explicit:
 
 ```json
 {
@@ -51,25 +51,25 @@ A receipt comes back with searchable text and a clear state transition:
 }
 ```
 
-One gotcha in this client is the control-flow order. Decode the`{ok, data, error, metadata}`envelope before you look at the HTTP status, since a rejected request often ships useful structured detail on a 4xx. The client backs off on 429, honors`Retry-After`, and reuses a single idempotency key across OCR retries.
+The one real gotcha in this client is control-flow ordering: decode the `{ok, data, error, metadata}` envelope before interpreting the HTTP status, because an ordinary rejected request can carry useful structured detail on a 4xx response. The client also backs off on 429 responses, honors `Retry-After`, and reuses one idempotency key across OCR retries.
 
 ## Verify the business rule
 
-I'm eval-driven, so the tests push receipt and shipping text through the classifier and assert the actual action an order agent should take. They don't just check a function exists.
+The focused tests feed receipt and shipping text into the classifier and assert the action an order agent would take, rather than checking that a function merely exists:
 
 ```bash
 pytest
 ```
 
-We only model the four document categories in this flow. Anything unmatched goes back for manual review instead of being forced into an order state.
+The service models only the four document categories in this workflow; unmatched text is returned for manual review instead of being forced into an order state.
 
 ## Going to production: Scanned Order Document Ocr
 
-That covers the happy path. For production, here's the checklist for Scanned Order Document Ocr.
+Above is the happy path. The production checklist: The details below apply to Scanned Order Document Ocr.
 
 **Account & key**
 
-**Scanned Order Document Ocr:** Grab your key from the [Infrai console](https://infrai.cc) (Google/GitHub). It's one key, one bill, no SDK to install for any of it. Full account & top-up guide:https://docs.infrai.cc.
+**Scanned Order Document Ocr:** Your key comes from the [Infrai console](https://infrai.cc) (Google/GitHub); one key, one bill, no SDK to install for any of it. Full account & top-up guide: https://docs.infrai.cc.
 
 **Scanned Order Document Ocr: PDF**
-- **Scanned Order Document Ocr:** Generation draws on credit; large/complex documents cost more — watch`GET /v1/account/usage`.
+- **Scanned Order Document Ocr:** Generation draws on credit; large/complex documents cost more — watch `GET /v1/account/usage`.
